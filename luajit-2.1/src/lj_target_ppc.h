@@ -1,6 +1,6 @@
 /*
-** Definitions for PPC/PPC64 CPUs.
-** Copyright (C) 2005-2015 Mike Pall. See Copyright Notice in luajit.h
+** Definitions for PPC CPUs.
+** Copyright (C) 2005-2016 Mike Pall. See Copyright Notice in luajit.h
 */
 
 #ifndef _LJ_TARGET_PPC_H
@@ -30,8 +30,13 @@ enum {
 
   /* Calling conventions. */
   RID_RET = RID_R3,
+#if LJ_LE
+  RID_RETHI = RID_R4,
+  RID_RETLO = RID_R3,
+#else
   RID_RETHI = RID_R3,
   RID_RETLO = RID_R4,
+#endif
   RID_FPRET = RID_F1,
 
   /* These definitions must match with the *.dasc file(s): */

@@ -1,6 +1,6 @@
 /*
 ** FFI C call handling.
-** Copyright (C) 2005-2015 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2016 Mike Pall. See Copyright Notice in luajit.h
 */
 
 #ifndef _LJ_CCALL_H
@@ -85,32 +85,52 @@ typedef union FPRArg {
 
 #elif LJ_TARGET_PPC
 
-#if LJ_ARCH_PPC64
 #define CCALL_NARG_GPR		8
+#if LJ_ARCH_BITS == 64
 #define CCALL_NARG_FPR		13
-#define CCALL_NRET_GPR		4	/* For complex double. */
-#define CCALL_NRET_FPR		1
+#if LJ_ARCH_PPC_ELFV2
+#define CCALL_NRET_GPR		2
+#define CCALL_NRET_FPR		8
 #define CCALL_SPS_EXTRA		14
-#define CCALL_SPS_FREE		0
 #else
-#define CCALL_NARG_GPR		8
+#define CCALL_NRET_GPR		1
+#define CCALL_NRET_FPR		2
+#define CCALL_SPS_EXTRA		16
+#endif
+#else
 #define CCALL_NARG_FPR		8
 #define CCALL_NRET_GPR		4	/* For complex double. */
 #define CCALL_NRET_FPR		1
 #define CCALL_SPS_EXTRA		4
-#define CCALL_SPS_FREE		0
 #endif
+#define CCALL_SPS_FREE		0
 
 typedef intptr_t GPRArg;
 typedef double FPRArg;
 
-#elif LJ_TARGET_MIPS
+#elif LJ_TARGET_MIPS32
 
 #define CCALL_NARG_GPR		4
-#define CCALL_NARG_FPR		2
-#define CCALL_NRET_GPR		2
-#define CCALL_NRET_FPR		2
+#define CCALL_NARG_FPR		(LJ_ABI_SOFTFP ? 0 : 2)
+#define CCALL_NRET_GPR		(LJ_ABI_SOFTFP ? 4 : 2)
+#define CCALL_NRET_FPR		(LJ_ABI_SOFTFP ? 0 : 2)
 #define CCALL_SPS_EXTRA		7
+#define CCALL_SPS_FREE		1
+
+typedef intptr_t GPRArg;
+typedef union FPRArg {
+  double d;
+  struct { LJ_ENDIAN_LOHI(float f; , float g;) };
+} FPRArg;
+
+#elif LJ_TARGET_MIPS64
+
+/* FP args are positional and overlay the GPR array. */
+#define CCALL_NARG_GPR		8
+#define CCALL_NARG_FPR		0
+#define CCALL_NRET_GPR		2
+#define CCALL_NRET_FPR		(LJ_ABI_SOFTFP ? 0 : 2)
+#define CCALL_SPS_EXTRA		3
 #define CCALL_SPS_FREE		1
 
 typedef intptr_t GPRArg;
